@@ -286,6 +286,10 @@ static __inline__ int abortboot(int bootdelay)
 # endif	/* CONFIG_AUTOBOOT_KEYED */
 #endif	/* CONFIG_BOOTDELAY >= 0  */
 
+#ifdef UBNT_USE_WATCHDOG
+	extern void ubnt_wd_disable();
+#endif
+
 /****************************************************************************/
 
 void main_loop (void)
@@ -382,7 +386,7 @@ void main_loop (void)
 	s = getenv ("bootdelay");
 	bootdelay = s ? (int)simple_strtol(s, NULL, 10) : CONFIG_BOOTDELAY;
 
-	debug ("### main_loop entered: bootdelay=%d\n\n", bootdelay);
+//	debug ("### main_loop entered: bootdelay=%d\n\n", bootdelay);
 
 # ifdef CONFIG_BOOT_RETRY_TIME
 	init_cmd_timeout ();
@@ -397,16 +401,39 @@ void main_loop (void)
 	else
 #endif /* CONFIG_BOOTCOUNT_LIMIT */
 		s = getenv ("bootcmd");
+       if (!s) {
+#ifdef CONFIG_ROOTFS_FLASH
+           /* XXX if rootfs is in flash, expect uImage to be in flash */
+#ifdef CONFIG_AR7100
+           setenv ("bootcmd", "bootm 0xbf200000");
+#else
+           setenv ("bootcmd", "bootm 0xbf450000");
+#endif /* CONFIG_AR7100 */
+#else
+           setenv ("bootcmd", "tftpboot 0x8022c090 uImage; bootm 0x8022c090");
+#endif
+       }
+		s = getenv ("bootcmd");
 
-	debug ("### main_loop: bootcmd=\"%s\"\n", s ? s : "<UNDEFINED>");
+//	debug ("### main_loop: bootcmd=\"%s\"\n", s ? s : "<UNDEFINED>");
 
 	if (bootdelay >= 0 && s && !abortboot (bootdelay)) {
 # ifdef CONFIG_AUTOBOOT_KEYED
 		int prev = disable_ctrlc(1);	/* disable Control C checking */
 # endif
 
+#ifdef UBNT_USE_WATCHDOG
+	ubnt_wd_disable();
+#endif
+
 # ifndef CFG_HUSH_PARSER
-		run_command (s, 0);
+		if (run_command (s, 0) == -1){
+			#if defined(CONFIG_AR7240)
+				printf("Boot failed: resetting...\n.");
+				ar7240_hw_reset();
+				fprintf(stderr, "*** reset failed ***\n");
+			#endif
+		}
 # else
 		parse_string_outer(s, FLAG_PARSE_SEMICOLON |
 				    FLAG_EXIT_FROM_LOOP);
@@ -437,6 +464,10 @@ void main_loop (void)
 	    extern void video_banner(void);
 	    video_banner();
 	}
+#endif
+
+#ifdef UBNT_USE_WATCHDOG
+	ubnt_wd_disable();
 #endif
 
 	/*

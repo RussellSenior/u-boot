@@ -28,10 +28,11 @@
 #include <command.h>
 #include <net.h>
 
-#if defined(CONFIG_I386)
+#if defined(CONFIG_I386) || defined(CONFIG_MIPS)
 DECLARE_GLOBAL_DATA_PTR;
 #endif
 
+#ifndef COMPRESSED_UBOOT
 int do_go (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
 	ulong	addr, rc;
@@ -44,7 +45,9 @@ int do_go (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 
 	addr = simple_strtoul(argv[1], NULL, 16);
 
+#ifdef DEBUG
 	printf ("## Starting application at 0x%08lX ...\n", addr);
+#endif
 
 	/*
 	 * pass address parameter as argv[0] (aka command name),
@@ -58,7 +61,12 @@ int do_go (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	argv[0] = (char *)gd;
 #endif
 #if !defined(CONFIG_NIOS)
-	rc = ((ulong (*)(int, char *[]))addr) (--argc, &argv[1]);
+	if (argc > 2 && argv[2][0] == 'b') {
+		printf ("## Board info at 0x%08lX ...\n", gd->bd);
+		rc = ((ulong (*)(int, int, int, int))addr)((int)gd->bd, 0, 0, 0);
+	} else {
+		rc = ((ulong (*)(int, char *[]))addr) (--argc, &argv[1]);
+	}
 #else
 	/*
 	 * Nios function pointers are address >> 1
@@ -67,7 +75,9 @@ int do_go (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 #endif
 	if (rc != 0) rcode = 1;
 
+#ifdef DEBUG
 	printf ("## Application terminated, rc = 0x%lX\n", rc);
+#endif
 	return rcode;
 }
 
@@ -87,3 +97,4 @@ U_BOOT_CMD(
 	"reset   - Perform RESET of the CPU\n",
 	NULL
 );
+#endif /* #ifndef COMPRESSED_UBOOT */

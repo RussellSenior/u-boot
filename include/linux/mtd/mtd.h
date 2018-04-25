@@ -1,5 +1,5 @@
 /*
- * $Id: mtd.h,v 1.56 2004/08/09 18:46:04 dmarlin Exp $
+ * $Id: //depot/sw/releases/7.3_AP/boot/u-boot/include/linux/mtd/mtd.h#1 $
  *
  * Copyright (C) 1999-2003 David Woodhouse <dwmw2@infradead.org> et al.
  *

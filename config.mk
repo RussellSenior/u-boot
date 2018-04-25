@@ -112,7 +112,7 @@ OBJDUMP = $(CROSS_COMPILE)objdump
 RANLIB	= $(CROSS_COMPILE)RANLIB
 
 RELFLAGS= $(PLATFORM_RELFLAGS)
-DBGFLAGS= -g #-DDEBUG
+#DBGFLAGS= -g #-DDEBUG
 OPTFLAGS= -Os #-fomit-frame-pointer
 ifndef LDSCRIPT
 #LDSCRIPT := $(TOPDIR)/board/$(BOARDDIR)/u-boot.lds.debug
@@ -129,10 +129,14 @@ CPPFLAGS := $(DBGFLAGS) $(OPTFLAGS) $(RELFLAGS)		\
 	$(gccincdir) -pipe $(PLATFORM_CPPFLAGS)
 
 ifdef BUILD_TAG
-CFLAGS := $(CPPFLAGS) -Wall -Wstrict-prototypes \
+CFLAGS := $(CPPFLAGS) -Wall -Wextra -Wstrict-prototypes \
 	-DBUILD_TAG='"$(BUILD_TAG)"'
 else
 CFLAGS := $(CPPFLAGS) -Wall -Wstrict-prototypes
+endif
+
+ifeq ($(UBNT_APP), 1)
+CFLAGS += -DUBNT_APP
 endif
 
 # avoid trigraph warnings while parsing pci.h (produced by NIOS gcc-2.9)

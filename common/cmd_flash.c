@@ -26,6 +26,7 @@
  */
 #include <common.h>
 #include <command.h>
+#include <asm/addrspace.h>
 
 #ifdef CONFIG_HAS_DATAFLASH
 #include <dataflash.h>
@@ -127,6 +128,8 @@ addr_spec(char *arg1, char *arg2, ulong *addr_first, ulong *addr_last)
 {
 	char len_used = 0; /* indicates if the "start +length" form used */
 	char *ep;
+        uint32_t flash_low_address = 0xffffffff;
+        uint32_t flash_high_address = 0;
 
 	*addr_first = simple_strtoul(arg1, &ep, 16);
 	if (ep == arg1 || *ep != '\0')
@@ -172,6 +175,11 @@ addr_spec(char *arg1, char *arg2, ulong *addr_first, ulong *addr_last)
 					sector_end_addr =
 						info->start[i+1] - 1;
 				}
+                /* Record lowest/highest addresses seen */
+                if (flash_low_address > info->start[i])
+                        flash_low_address = info->start[i];
+                if (flash_high_address < sector_end_addr) 
+                        flash_high_address = sector_end_addr;
 				if (*addr_last <= sector_end_addr &&
 						*addr_last >= info->start[i]){
 					/* sector found */
@@ -185,8 +193,7 @@ addr_spec(char *arg1, char *arg2, ulong *addr_first, ulong *addr_last)
 		} /* bank */
 		if (!found){
 			/* error, addres not in flash */
-			printf("Error: end address (0x%08lx) not in flash!\n",
-								*addr_last);
+			printf("Error: end address (0x%08lx) not in flash range {0x%08lx..0x%08lx}!\n", *addr_last, flash_low_address, flash_high_address);
 			return -1;
 		}
 	} /* "start +length" from used */
@@ -276,7 +283,7 @@ flash_fill_sect_ranges (ulong addr_first, ulong addr_last,
 
 	return rcode;
 }
-
+#ifndef COMPRESSED_UBOOT
 int do_flinfo ( cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
 	ulong bank;
@@ -304,6 +311,7 @@ int do_flinfo ( cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	flash_print_info (&flash_info[bank-1]);
 	return 0;
 }
+#endif /* #ifndef COMPRESSED_UBOOT */
 
 int do_flerase (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
@@ -441,6 +449,7 @@ int flash_sect_erase (ulong addr_first, ulong addr_last)
 	return rcode;
 }
 
+#ifndef COMPRESSED_UBOOT
 int do_protect (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
 	flash_info_t *info;
@@ -670,7 +679,7 @@ int flash_sect_protect (int p, ulong addr_first, ulong addr_last)
 	}
 	return rcode;
 }
-
+#endif /* #ifndef COMPRESSED_UBOOT */
 
 /**************************************************/
 #if (CONFIG_COMMANDS & CFG_CMD_JFFS2) && defined(CONFIG_JFFS2_CMDLINE)
@@ -683,25 +692,12 @@ int flash_sect_protect (int p, ulong addr_first, ulong addr_last)
 # define TMP_PROT_OFF	/* empty */
 #endif
 
+#ifndef COMPRESSED_UBOOT
 U_BOOT_CMD(
 	flinfo,    2,    1,    do_flinfo,
 	"flinfo  - print FLASH memory information\n",
 	"\n    - print information for all FLASH memory banks\n"
 	"flinfo N\n    - print information for FLASH memory bank # N\n"
-);
-
-U_BOOT_CMD(
-	erase,   3,   1,  do_flerase,
-	"erase   - erase FLASH memory\n",
-	"start end\n"
-	"    - erase FLASH from addr 'start' to addr 'end'\n"
-	"erase start +len\n"
-	"    - erase FLASH from addr 'start' to the end of sect "
-	"w/addr 'start'+'len'-1\n"
-	"erase N:SF[-SL]\n    - erase sectors SF-SL in FLASH bank # N\n"
-	"erase bank N\n    - erase FLASH bank # N\n"
-	TMP_ERASE
-	"erase all\n    - erase all FLASH banks\n"
 );
 
 U_BOOT_CMD(
@@ -728,6 +724,23 @@ U_BOOT_CMD(
 	TMP_PROT_OFF
 	"protect off all\n    - make all FLASH banks writable\n"
 );
+
+#endif /* #ifndef COMPRESSED_UBOOT */
+
+U_BOOT_CMD(
+	erase,   3,   1,  do_flerase,
+	"erase   - erase FLASH memory\n",
+	"start end\n"
+	"    - erase FLASH from addr 'start' to addr 'end'\n"
+	"erase start +len\n"
+	"    - erase FLASH from addr 'start' to the end of sect "
+	"w/addr 'start'+'len'-1\n"
+	"erase N:SF[-SL]\n    - erase sectors SF-SL in FLASH bank # N\n"
+	"erase bank N\n    - erase FLASH bank # N\n"
+	TMP_ERASE
+	"erase all\n    - erase all FLASH banks\n"
+);
+
 
 #undef	TMP_ERASE
 #undef	TMP_PROT_ON

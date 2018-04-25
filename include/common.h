@@ -187,7 +187,11 @@ void	reset_cmd_timeout(void);
 /* lib_$(ARCH)/board.c */
 void	board_init_f  (ulong);
 void	board_init_r  (gd_t *, ulong);
+#ifdef COMPRESSED_UBOOT
+int	checkboard    (char *);
+#else
 int	checkboard    (void);
+#endif
 int	checkflash    (void);
 int	checkdram     (void);
 char *	strmhz(char *buf, long hz);
@@ -230,7 +234,7 @@ int env_complete(char *var, int maxv, char *cmdv[], int maxsz, char *buf);
 #endif
 
 void	pci_init      (void);
-void	pci_init_board(void);
+int pci_init_board(void);
 void	pciinfo	      (int, int);
 
 #if defined(CONFIG_PCI) && defined(CONFIG_440)
@@ -248,6 +252,7 @@ void	pciinfo	      (int, int);
 
 int	misc_init_f   (void);
 int	misc_init_r   (void);
+int	misc_init_end_r   (void);
 
 /* common/exports.c */
 void	jumptable_init(void);
@@ -356,6 +361,7 @@ int	dcache_status (void);
 void	dcache_enable (void);
 void	dcache_disable(void);
 void	relocate_code (ulong, gd_t *, ulong);
+void 	ar7240_ddr_tap_init(void);
 ulong	get_endaddr   (void);
 void	trap_init     (ulong);
 #if defined (CONFIG_4xx)	|| \

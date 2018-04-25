@@ -33,6 +33,8 @@
 
 #if (CONFIG_COMMANDS & CFG_CMD_NET)
 
+#ifndef CONFIG_NET_REDUCED
+
 #define TIMEOUT		5		/* Seconds before trying BOOTP again	*/
 #ifndef CONFIG_NET_RETRY_COUNT
 # define TIMEOUT_COUNT	5		/* # of timeouts before giving up  */
@@ -972,4 +974,5 @@ void DhcpRequest(void)
 }
 #endif	/* CFG_CMD_DHCP */
 
+#endif /* CONFIG_NET_REDUCED */
 #endif /* CFG_CMD_NET */

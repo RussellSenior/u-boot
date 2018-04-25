@@ -2,8 +2,8 @@
  *
  * Name:	skgei2c.h
  * Project:	GEnesis, PCI Gigabit Ethernet Adapter
- * Version:	$Revision: 1.23 $
- * Date:	$Date: 2002/12/19 14:34:27 $
+ * Version:	$Revision: #1 $
+ * Date:	$Date: 2008/10/29 $
  * Purpose:	Special GEnesis defines for TWSI
  *
  ******************************************************************************/

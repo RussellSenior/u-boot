@@ -249,6 +249,10 @@ void env_relocate (void)
 		env_ptr->flags = 0xFF;
 #endif
 		env_crc_update ();
+#ifdef AUTO_RESTORE_DEFAULT_ENVIRONMENT
+		puts ("***           saving default environment ...\n");
+		saveenv();
+#endif
 		gd->env_valid = 1;
 	}
 	else {

@@ -28,6 +28,7 @@
 #include <common.h>
 #include <command.h>
 
+#ifndef COMPRESSED_UBOOT
 #if (CONFIG_COMMANDS & CFG_CMD_MII)
 #include <miiphy.h>
 
@@ -595,3 +596,4 @@ U_BOOT_CMD(
 #endif /* CONFIG_TERSE_MII */
 
 #endif /* CFG_CMD_MII */
+#endif /* #ifndef COMPRESSED_UBOOT */

@@ -28,6 +28,9 @@
 #include <asm/byteorder.h>
 #include <asm/addrspace.h>
 
+#ifdef CONFIG_AR7240
+#include <ar7240_soc.h>
+#endif
 DECLARE_GLOBAL_DATA_PTR;
 
 #define	LINUX_MAX_ENVS		256
@@ -54,6 +57,9 @@ static int	linux_env_idx;
 static void linux_params_init (ulong start, char * commandline);
 static void linux_env_set (char * env_name, char * env_val);
 
+#ifdef UBNT_USE_WATCHDOG
+	extern void ubnt_wd_reset(u32 counter);
+#endif
 
 void do_bootm_linux (cmd_tbl_t * cmdtp, int flag, int argc, char *argv[],
 		     ulong addr, ulong * len_ptr, int verify)
@@ -65,7 +71,7 @@ void do_bootm_linux (cmd_tbl_t * cmdtp, int flag, int argc, char *argv[],
 	image_header_t *hdr = &header;
 	char *commandline = getenv ("bootargs");
 	char env_buf[12];
-
+    
 	theKernel =
 		(void (*)(int, char **, char **, int *)) ntohl (hdr->ih_ep);
 
@@ -176,6 +182,9 @@ void do_bootm_linux (cmd_tbl_t * cmdtp, int flag, int argc, char *argv[],
 	}
 
 	SHOW_BOOT_PROGRESS (15);
+	#ifdef UBNT_APP
+		ubnt_cer();
+	#endif
 
 #ifdef DEBUG
 	printf ("## Transferring control to Linux (at address %08lx) ...\n",
@@ -213,12 +222,16 @@ void do_bootm_linux (cmd_tbl_t * cmdtp, int flag, int argc, char *argv[],
 	/* we assume that the kernel is in place */
 	printf ("\nStarting kernel ...\n\n");
 
+#ifdef UBNT_USE_WATCHDOG
+	ubnt_wd_reset(0xFFFFFFFF);
+#endif
+
 	theKernel (linux_argc, linux_argv, linux_env, 0);
 }
 
 static void linux_params_init (ulong start, char *line)
 {
-	char *next, *quote, *argp;
+	char *next, *quote, *argp, *mtds;
 
 	linux_argc = 1;
 	linux_argv = (char **) start;
@@ -249,6 +262,18 @@ static void linux_params_init (ulong start, char *line)
 		linux_argv[linux_argc] = argp;
 		memcpy (argp, line, next - line);
 		argp[next - line] = 0;
+#if defined(CONFIG_AR7240)
+#define REVSTR	"REVISIONID"
+#define PYTHON	"python"
+#define VIRIAN	"virian"
+		if (strcmp(argp, REVSTR) == 0) {
+			if (is_ar7241() || is_ar7242()) {
+				strcpy(argp, VIRIAN);
+			} else {
+				strcpy(argp, PYTHON);
+			}
+		}
+#endif
 
 		argp += next - line + 1;
 		linux_argc++;
@@ -258,6 +283,12 @@ static void linux_params_init (ulong start, char *line)
 
 		line = next;
 	}
+	if (!(mtds = getenv("mtdparts")))
+		mtds = MTDPARTS_DEFAULT;
+	strcpy(argp, mtds); /* XXX: check for mtds len */
+	linux_argv[linux_argc] = argp;
+	linux_argc++;
+	argp += strlen(mtds) + 1;
 
 	linux_env = (char **) (((ulong) argp + 15) & ~15);
 	linux_env[0] = 0;

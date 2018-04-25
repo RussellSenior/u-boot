@@ -19,4 +19,16 @@ if head=`git rev-parse --verify HEAD 2>/dev/null`; then
 	if git diff-files | read dummy; then
 		printf '%s' -dirty
 	fi
+else
+	svn_ver=`svnversion -n`
+	if [ "${svn_ver}" != "exported" ]; then
+		case ${svn_ver} in
+		*[:MPS]*)
+			printf '%s%s' -s ${svn_ver}
+			;;
+		*)
+			printf '%s%s' -s `svn info | awk -F': ' '/Last Changed Rev:/{print $2}'`
+			;;
+		esac
+	fi
 fi

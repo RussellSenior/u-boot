@@ -45,6 +45,11 @@ extern int timer_init(void);
 
 extern int incaip_set_cpuclk(void);
 
+#ifdef UBNT_APP
+extern int ubntappinit_found_in_env(void);
+extern int do_reset (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[]);
+#endif
+
 extern ulong uboot_end_data;
 extern ulong uboot_end;
 
@@ -113,6 +118,7 @@ static int display_banner(void)
 {
 
 	printf ("\n\n%s\n\n", version_string);
+
 	return (0);
 }
 
@@ -168,7 +174,9 @@ init_fnc_t *init_sequence[] = {
 	serial_init,		/* serial communications setup */
 	console_init_f,
 	display_banner,		/* say that we are here */
+#ifndef UBNT_APP
 	checkboard,
+#endif
 	init_func_ram,
 	NULL,
 };
@@ -405,9 +413,18 @@ void board_init_r (gd_t *id, ulong dest_addr)
 	}
 #endif	/* CFG_CMD_NET */
 
+#ifdef UBNT_APP
+	ubnt_app_load();
+	run_command("go ${ubntaddr} uappinit", 0);
+#endif
+
 #if defined(CONFIG_MISC_INIT_R)
 	/* miscellaneous platform dependent initialisations */
 	misc_init_r ();
+#endif
+
+#ifdef UBNT_APP
+	run_command("go ${ubntaddr} umisc_init_r", 0);
 #endif
 
 #if (CONFIG_COMMANDS & CFG_CMD_NET)
@@ -416,6 +433,15 @@ void board_init_r (gd_t *id, ulong dest_addr)
 #endif
 	eth_initialize(gd->bd);
 #endif
+
+#if defined(CONFIG_MISC_INIT_END_R)
+	misc_init_end_r();
+#endif
+
+#ifdef UBNT_APP
+	run_command("go ${ubntaddr} umisc_init_end_r", 0);
+#endif
+
 
 	/* main_loop() can return to retry autoboot, if so just run it again. */
 	for (;;) {

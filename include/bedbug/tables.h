@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: //depot/sw/releases/7.3_AP/boot/u-boot/include/bedbug/tables.h#1 $ */
 
 #ifndef TABLES_H
 #define TABLES_H

@@ -2,8 +2,8 @@
  *
  * Name:	skgeinit.h
  * Project:	GEnesis, PCI Gigabit Ethernet Adapter
- * Version:	$Revision: 1.75 $
- * Date:	$Date: 2003/02/05 13:36:39 $
+ * Version:	$Revision: #1 $
+ * Date:	$Date: 2008/10/29 $
  * Purpose:	Structures and prototypes for the GE Init Module
  *
  ******************************************************************************/

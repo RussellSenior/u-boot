@@ -34,7 +34,7 @@
 extern int do_bootm (cmd_tbl_t *, int, int, char *[]);
 
 static int netboot_common (proto_t, cmd_tbl_t *, int , char *[]);
-
+#ifndef CONFIG_NET_REDUCED
 int do_bootp (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
 	return netboot_common (BOOTP, cmdtp, argc, argv);
@@ -46,17 +46,6 @@ U_BOOT_CMD(
 	"[loadAddress] [bootfilename]\n"
 );
 
-int do_tftpb (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
-{
-	return netboot_common (TFTP, cmdtp, argc, argv);
-}
-
-U_BOOT_CMD(
-	tftpboot,	3,	1,	do_tftpb,
-	"tftpboot- boot image via network using TFTP protocol\n",
-	"[loadAddress] [bootfilename]\n"
-);
-
 int do_rarpb (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
 	return netboot_common (RARP, cmdtp, argc, argv);
@@ -65,6 +54,18 @@ int do_rarpb (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 U_BOOT_CMD(
 	rarpboot,	3,	1,	do_rarpb,
 	"rarpboot- boot image via network using RARP/TFTP protocol\n",
+	"[loadAddress] [bootfilename]\n"
+);
+#endif /* CONFIG_NET_REDUCED */
+
+int do_tftpb (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
+{
+	return netboot_common (TFTP, cmdtp, argc, argv);
+}
+
+U_BOOT_CMD(
+	tftpboot,	3,	1,	do_tftpb,
+	"tftpboot- boot image via network using TFTP protocol\n",
 	"[loadAddress] [bootfilename]\n"
 );
 
@@ -93,6 +94,36 @@ U_BOOT_CMD(
 	"[loadAddress] [host ip addr:bootfilename]\n"
 );
 #endif	/* CFG_CMD_NFS */
+
+#if (CONFIG_COMMANDS & CFG_CMD_TFTP_SERVER)
+/* from net/tftp_server.c */
+extern int TftpServerOverwriteBootloader;
+extern int TftpServerUseDefinedIP;
+int do_tftp_server (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
+{
+	TftpServerOverwriteBootloader = TftpServerUseDefinedIP = 0;
+	while (argc > 1) {
+		if (!(strcmp(argv[argc-1], "-f"))) {
+			TftpServerOverwriteBootloader = 1;
+			printf("Boot loader overwrite mode\n");
+		}
+		else if (!(strcmp(argv[argc-1], "-e"))) {
+			TftpServerUseDefinedIP = 1;
+			printf("Using environment IP\n");
+		}
+		argc--;
+	}
+
+	return netboot_common(TFTP_SERVER, cmdtp, argc, argv);
+}
+
+U_BOOT_CMD(
+	urescue,	3,	1,	do_tftp_server,
+	"urescue\t- start TFTP server and wait for firmware\n",
+	"\n[-f] full, update bootloader too\n"
+	"[-e] use environment ip \n"
+);
+#endif	/* CFG_CMD_TFTP_SERVER */
 
 static void netboot_update_env (void)
 {

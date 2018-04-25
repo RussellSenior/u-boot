@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: //depot/sw/releases/7.3_AP/boot/u-boot/include/bedbug/bedbug.h#1 $ */
 
 #ifndef _BEDBUG_H
 #define _BEDBUG_H

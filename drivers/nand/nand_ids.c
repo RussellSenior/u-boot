@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 2002 Thomas Gleixner (tglx@linutronix.de)
   *
- * $Id: nand_ids.c,v 1.10 2004/05/26 13:40:12 gleixner Exp $
+ * $Id: //depot/sw/releases/7.3_AP/boot/u-boot/drivers/nand/nand_ids.c#1 $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as

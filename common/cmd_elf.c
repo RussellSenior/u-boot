@@ -74,6 +74,7 @@ int do_bootelf (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	return rcode;
 }
 
+#ifndef CONFIG_ELF_REDUCED
 /* ======================================================================
  * Interpreter command to boot VxWorks from a memory image.  The image can
  * be either an ELF image or a raw binary.  Will attempt to setup the
@@ -220,6 +221,7 @@ int do_bootvx ( cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	puts ("## vxWorks terminated\n");
 	return 1;
 }
+#endif /* CONFIG_ELF_REDUCED */
 
 /* ======================================================================
  * Determine if a valid ELF image exists at the given memory location.
@@ -320,10 +322,12 @@ U_BOOT_CMD(
 	" [address] - load address of ELF image.\n"
 );
 
+#ifndef CONFIG_ELF_REDUCED
 U_BOOT_CMD(
 	bootvx,      2,      0,      do_bootvx,
 	"bootvx  - Boot vxWorks from an ELF image\n",
 	" [address] - load address of vxWorks ELF image.\n"
 );
+#endif /* CONFIG_ELF_REDUCED */
 
 #endif	/* CFG_CMD_ELF */

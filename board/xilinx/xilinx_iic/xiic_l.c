@@ -1,4 +1,4 @@
-/* $Id: xiic_l.c,v 1.2 2002/12/05 19:32:40 meinelte Exp $ */
+/* $Id: //depot/sw/releases/7.3_AP/boot/u-boot/board/xilinx/xilinx_iic/xiic_l.c#1 $ */
 /******************************************************************************
 *
 *	XILINX IS PROVIDING THIS DESIGN, CODE, OR INFORMATION "AS IS"
