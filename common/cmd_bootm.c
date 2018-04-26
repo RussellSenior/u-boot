@@ -31,6 +31,7 @@
 #include <malloc.h>
 #include <zlib.h>
 #include <bzlib.h>
+#include <LzmaWrapper.h>
 #include <environment.h>
 #include <asm/byteorder.h>
 
@@ -150,6 +151,8 @@ image_header_t header;
 
 ulong load_addr = CFG_LOAD_ADDR;		/* Default Load Address */
 
+#define CONFIG_LZMA 1
+
 int do_bootm (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
 	ulong	iflag;
@@ -180,7 +183,9 @@ int do_bootm (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		read_dataflash(addr, sizeof(image_header_t), (char *)&header);
 	} else
 #endif
-	memmove (&header, (char *)addr, sizeof(image_header_t));
+	{
+		memmove (&header, (char *)addr, sizeof(image_header_t));
+	}
 
 	if (ntohl(hdr->ih_magic) != IH_MAGIC) {
 #ifdef __I386__	/* correct image format not implemented yet - fake it */
@@ -222,7 +227,6 @@ int do_bootm (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	}
 #endif
 
-
 	/* for multi-file images we need the data part, too */
 	print_image_hdr ((image_header_t *)addr);
 
@@ -230,7 +234,7 @@ int do_bootm (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	len  = ntohl(hdr->ih_size);
 
 	if (verify) {
-		puts ("   Verifying Checksum ... ");
+		printf("   Verifying Checksum at 0x%p ...", data);
 		if (crc32 (0, (uchar *)data, len) != ntohl(hdr->ih_dcrc)) {
 			printf ("Bad Data CRC\n");
 			SHOW_BOOT_PROGRESS (-3);
@@ -314,6 +318,17 @@ int do_bootm (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	dcache_disable();
 #endif
 
+#if defined(CONFIG_AR7100) || defined(CONFIG_AR7240)
+	/*
+	 * Flush everything, restore caches for linux
+	 */
+	mips_cache_flush();
+	mips_icache_flush_ix();
+
+	/* XXX - this causes problems when booting from flash */
+	/* dcache_disable(); */
+#endif
+
 	switch (hdr->ih_comp) {
 	case IH_COMP_NONE:
 		if(ntohl(hdr->ih_load) == addr) {
@@ -339,6 +354,7 @@ int do_bootm (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 #endif	/* CONFIG_HW_WATCHDOG || CONFIG_WATCHDOG */
 		}
 		break;
+#ifndef COMPRESSED_UBOOT
 	case IH_COMP_GZIP:
 		printf ("   Uncompressing %s ... ", name);
 		if (gunzip ((void *)ntohl(hdr->ih_load), unc_len,
@@ -367,6 +383,19 @@ int do_bootm (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		}
 		break;
 #endif /* CONFIG_BZIP2 */
+#endif /* #ifndef COMPRESSED_UBOOT */
+#ifdef CONFIG_LZMA
+	case IH_COMP_LZMA:
+		printf ("   Uncompressing %s ... ", name);
+		i = lzma_inflate ((unsigned char *)data, len, (unsigned char*)ntohl(hdr->ih_load), &unc_len);
+		if (i != LZMA_RESULT_OK) {
+			printf ("LZMA ERROR %d - must RESET board to recover\n", i);
+			SHOW_BOOT_PROGRESS (-6);
+			udelay(100000);
+			do_reset (cmdtp, flag, argc, argv);
+		}
+		break;
+#endif /* CONFIG_LZMA */
 	default:
 		if (iflag)
 			enable_interrupts();
@@ -1267,6 +1296,7 @@ print_type (image_header_t *hdr)
 	case IH_COMP_NONE:	comp = "uncompressed";		break;
 	case IH_COMP_GZIP:	comp = "gzip compressed";	break;
 	case IH_COMP_BZIP2:	comp = "bzip2 compressed";	break;
+	case IH_COMP_LZMA:	comp = "lzma compressed";	break;
 	default:		comp = "unknown compression";	break;
 	}
 
@@ -1299,7 +1329,7 @@ static void zfree(void *x, void *addr, unsigned nb)
 #define RESERVED	0xe0
 
 #define DEFLATED	8
-
+#ifndef COMPRESSED_UBOOT
 int gunzip(void *dst, int dstlen, unsigned char *src, unsigned long *lenp)
 {
 	z_stream s;
@@ -1361,7 +1391,7 @@ void bz_internal_error(int errcode)
 	printf ("BZIP2 internal error %d\n", errcode);
 }
 #endif /* CONFIG_BZIP2 */
-
+#endif /* #ifndef COMPRESSED_UBOOT */
 static void
 do_bootm_rtems (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[],
 		ulong addr, ulong *len_ptr, int verify)

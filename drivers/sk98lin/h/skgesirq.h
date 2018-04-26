@@ -2,8 +2,8 @@
  *
  * Name:	skgesirq.h
  * Project:	GEnesis, PCI Gigabit Ethernet Adapter
- * Version:	$Revision: 1.26 $
- * Date:	$Date: 2002/10/14 09:52:36 $
+ * Version:	$Revision: #1 $
+ * Date:	$Date: 2011/09/20 $
  * Purpose:	SK specific Gigabit Ethernet special IRQ functions
  *
  ******************************************************************************/

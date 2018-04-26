@@ -498,9 +498,9 @@ int pci_hose_scan(struct pci_controller *hose)
 
 void pci_init(void)
 {
+	int i;
 #if defined(CONFIG_PCI_BOOTDELAY)
 	char *s;
-	int i;
 
 	/* wait "pcidelay" ms (if defined)... */
 	s = getenv ("pcidelay");
@@ -512,7 +512,11 @@ void pci_init(void)
 #endif /* CONFIG_PCI_BOOTDELAY */
 
 	/* now call board specific pci_init()... */
-	pci_init_board();
+	for (i = 1; i <= 10 && pci_init_board() == -1; i++){
+		;
+	}
+
+	printf("PCIe WLAN Module %sfound (#%d).\n", (i<=10)?"":"not ",i);
 }
 
 #endif /* CONFIG_PCI */

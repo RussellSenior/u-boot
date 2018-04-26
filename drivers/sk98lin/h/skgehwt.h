@@ -2,8 +2,8 @@
  *
  * Name:	skhwt.h
  * Project:	GEnesis, PCI Gigabit Ethernet Adapter
- * Version:	$Revision: 1.5 $
- * Date:	$Date: 1999/11/22 13:54:24 $
+ * Version:	$Revision: #1 $
+ * Date:	$Date: 2011/09/20 $
  * Purpose:	Defines for the hardware timer functions
  *
  ******************************************************************************/

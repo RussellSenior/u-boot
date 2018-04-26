@@ -205,7 +205,7 @@ int do_nand(cmd_tbl_t * cmdtp, int flag, int argc, char *argv[])
 		printf("\nNAND erase: device %d offset 0x%x, size 0x%x ",
 		       nand_curr_device, off, size);
 		ret = nand_erase(nand, off, size);
-		printf("%s\n", ret ? "ERROR" : "OK");
+		printf("\n%s\n", ret ? "ERROR" : "OK");
 
 		return ret == 0 ? 0 : 1;
 	}
@@ -246,13 +246,13 @@ int do_nand(cmd_tbl_t * cmdtp, int flag, int argc, char *argv[])
 			return 1;
 
 		i = strncmp(cmd, "read", 4) == 0;	/* 1 = read, 0 = write */
-		printf("\nNAND %s: device %d offset %u, size %u ... ",
+		printf("\nNAND %s: device %d offset 0x%x, size %u ... ",
 		       i ? "read" : "write", nand_curr_device, off, size);
 
 		if (i)
-			ret = nand_read(nand, off, &size, (u_char *)addr);
+			ret = nand_read(nand, (loff_t)off, &size, (u_char *)addr);
 		else
-			ret = nand_write(nand, off, &size, (u_char *)addr);
+			ret = nand_write(nand, (loff_t)off, &size, (u_char *)addr);
 
 		printf(" %d bytes %s: %s\n", size,
 		       i ? "read" : "written", ret ? "ERROR" : "OK");
@@ -361,20 +361,25 @@ int do_nandboot(cmd_tbl_t * cmdtp, int flag, int argc, char *argv[])
 	/* Loading ok, update default load address */
 
 	load_addr = addr;
-
+#ifndef CONFIG_ATH_NAND_SUPPORT
 	/* Check if we should attempt an auto-start */
 	if (((ep = getenv("autostart")) != NULL) && (strcmp(ep, "yes") == 0)) {
+#endif
 		char *local_args[2];
 		extern int do_bootm(cmd_tbl_t *, int, int, char *[]);
 
 		local_args[0] = argv[0];
 		local_args[1] = NULL;
 
+#ifndef CONFIG_ATH_NAND_SUPPORT
 		printf("Automatic boot of image at addr 0x%08lx ...\n", addr);
+#endif
 
 		do_bootm(cmdtp, 0, 1, local_args);
 		return 1;
+#ifndef CONFIG_ATH_NAND_SUPPORT
 	}
+#endif
 	return 0;
 }
 

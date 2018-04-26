@@ -2,8 +2,8 @@
  *
  * Name:	skdebug.h
  * Project:	GEnesis, PCI Gigabit Ethernet Adapter
- * Version:	$Revision: 1.12 $
- * Date:	$Date: 2002/07/15 15:37:13 $
+ * Version:	$Revision: #1 $
+ * Date:	$Date: 2011/09/20 $
  * Purpose:	SK specific DEBUG support
  *
  ******************************************************************************/

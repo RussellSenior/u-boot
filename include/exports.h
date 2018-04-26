@@ -3,7 +3,9 @@
 
 #ifndef __ASSEMBLY__
 
+#ifndef UBNT_APP
 #include <common.h>
+#endif
 
 /* These are declarations of exported functions available in C code */
 unsigned long get_version(void);
@@ -12,18 +14,29 @@ int  tstc(void);
 void putc(const char);
 void puts(const char*);
 void printf(const char* fmt, ...);
+#ifndef UBNT_APP
 void install_hdlr(int, interrupt_handler_t*, void*);
+#endif
 void free_hdlr(int);
 void *malloc(size_t);
 void free(void*);
 void udelay(unsigned long);
 unsigned long get_timer(unsigned long);
+#ifndef UBNT_APP
 void vprintf(const char *, va_list);
+#endif
 void do_reset (void);
 #if (CONFIG_COMMANDS & CFG_CMD_I2C)
 int i2c_write (uchar, uint, int , uchar* , int);
 int i2c_read (uchar, uint, int , uchar* , int);
 #endif	/* CFG_CMD_I2C */
+#ifdef UBNT_APP
+int find_mtd_part(const char *, struct mtd_device **, unsigned char *, struct part_info **);
+char *getenv (char *);
+void setenv (char *, char *);
+int pci_read_config_word(int , int , unsigned short *);
+int pci_read_config_byte(int , int , unsigned char *);
+#endif
 
 void app_startup(char **);
 
