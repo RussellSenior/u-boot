@@ -58,7 +58,9 @@ typedef struct
 /* bootp.c */
 extern ulong	BootpID;		/* ID of cur BOOTP request		*/
 extern char	BootFile[128];		/* Boot file name			*/
+#ifndef CONFIG_NET_REDUCED
 extern int	BootpTry;
+#endif
 #ifdef CONFIG_BOOTP_RANDOM_DELAY
 ulong		seed1, seed2;		/* seed for random BOOTP delay		*/
 #endif

@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id:  $ */
 
 #ifndef _BEDBUG_H
 #define _BEDBUG_H

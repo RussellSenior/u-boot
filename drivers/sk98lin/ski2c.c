@@ -2,8 +2,8 @@
  *
  * Name:	ski2c.c
  * Project:	GEnesis, PCI Gigabit Ethernet Adapter
- * Version:	$Revision: 1.57 $
- * Date:	$Date: 2003/01/28 09:17:38 $
+ * Version:	$Revision: #1 $
+ * Date:	$Date:  $
  * Purpose:	Functions to access Voltage and Temperature Sensor
  *
  ******************************************************************************/
@@ -236,7 +236,7 @@
  *	I2C Protocol
  */
 static const char SysKonnectFileId[] =
-	"$Id: ski2c.c,v 1.57 2003/01/28 09:17:38 rschmidt Exp $";
+	"$Id:  $";
 
 #include "h/skdrv1st.h"		/* Driver Specific Definitions */
 #include "h/lm80.h"

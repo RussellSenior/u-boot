@@ -872,9 +872,11 @@ jffs2_1pass_build_lists(struct part_info * part)
 						"%d < %d\n", node->totlen,
 						sizeof(struct jffs2_unknown_node));
 			} else {
-				printf("Unknown node type: %x len %d "
-					"offset 0x%x\n", node->nodetype,
-					node->totlen, offset);
+                if (node->nodetype != JFFS2_NODETYPE_SUMMARY) {
+				    printf("Unknown node type: %x len %d "
+					    "offset 0x%x\n", node->nodetype,
+					    node->totlen, offset);
+                }
 			}
 			offset += ((node->totlen + 3) & ~3);
 			ofs += ((node->totlen + 3) & ~3);

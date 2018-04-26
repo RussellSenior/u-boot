@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id:  $ */
 
 #ifndef _REGS_H
 #define _REGS_H

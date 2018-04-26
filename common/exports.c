@@ -12,6 +12,10 @@ unsigned long get_version(void)
 	return XF_VERSION;
 }
 
+#ifdef UBNT_APP
+#define EXPORT_FUNC(sym) gd->jt[XF_##sym] = (void *)sym;
+#endif
+
 void jumptable_init (void)
 {
 	int i;
@@ -33,4 +37,9 @@ void jumptable_init (void)
 	gd->jt[XF_i2c_write] = (void *) i2c_write;
 	gd->jt[XF_i2c_read] = (void *) i2c_read;
 #endif	/* CFG_CMD_I2C */
+
+#ifdef UBNT_APP
+#include <_exports.h>
+#endif
+
 }

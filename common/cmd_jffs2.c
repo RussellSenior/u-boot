@@ -15,7 +15,7 @@
  *   Parsing routines are based on driver/mtd/cmdline.c from the linux 2.4
  *   kernel tree.
  *
- *   $Id: cmdlinepart.c,v 1.17 2004/11/26 11:18:47 lavinen Exp $
+ *   $Id:  $
  *   Copyright 2002 SYSGO Real-Time Solutions GmbH
  *
  * See file CREDITS for list of people who contributed to this
@@ -134,6 +134,7 @@
 
 #ifdef CONFIG_JFFS2_CMDLINE
 /* default values for mtdids and mtdparts variables */
+#define MTDIDS_DEFAULT "nor0=ath-nor0"
 #if defined(MTDIDS_DEFAULT)
 static const char *const mtdids_default = MTDIDS_DEFAULT;
 #else
@@ -1296,6 +1297,49 @@ static void list_partitions(void)
 	printf("mtdparts: %s\n", mtdparts_default);
 }
 
+/* Enable this for Ubiquiti rescue extension */
+#if (CONFIG_COMMANDS & CFG_CMD_TFTP_SERVER)
+/*
+ * Run through all devices and all parts, return first
+ * part that has specified name
+ *
+ * @id - partition name, for example, "kernel"
+ * dev,part - filled on return
+ *
+ * Return value: 1 if partition was found.
+ */
+int find_mtd_part(const char *id, struct mtd_device **dev,
+		u8 *part_num, struct part_info **part)
+{
+	struct list_head *dev_entry, *part_entry;
+	struct mtd_device *dev_tmp;
+
+	*part_num = 0;
+	*dev = NULL;
+	*part = NULL;
+	/* device loop */
+	list_for_each(dev_entry, &devices) {
+		dev_tmp = list_entry(dev_entry, struct mtd_device, link);
+
+		*part_num = 0;
+		/* part loop */
+		list_for_each(part_entry, &dev_tmp->parts) {
+			struct part_info *pp;
+
+			pp = list_entry(part_entry, struct part_info, link);
+			if (!strcmp(id, pp->name)) {
+				*dev = dev_tmp;
+				*part = pp;
+				return 1;
+			}
+			*part_num++;
+		}
+	}
+
+	return 0;
+}
+#endif
+
 /**
  * Given partition identifier in form of <dev_type><dev_num>,<part_num> find
  * corresponding device and verify partition number.
@@ -1824,6 +1868,7 @@ static struct part_info* jffs2_part_info(struct mtd_device *dev, unsigned int pa
 /* U-boot commands				   */
 /***************************************************/
 
+#ifndef CONFIG_JFFS2_REDUCED
 /**
  * Routine implementing fsload u-boot command. This routine tries to load
  * a requested file from jffs2/cramfs filesystem on a current partition.
@@ -1964,8 +2009,12 @@ int do_jffs2_fsinfo(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	return 1;
 }
 
+#endif /* CONFIG_JFFS2_REDUCED */
+
 /* command line only */
 #ifdef CONFIG_JFFS2_CMDLINE
+
+#ifndef CONFIG_JFFS2_REDUCED
 /**
  * Routine implementing u-boot chpart command. Sets new current partition based
  * on the user supplied partition id. For partition id format see find_dev_and_part().
@@ -2003,6 +2052,7 @@ int do_jffs2_chpart(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 
 	return 0;
 }
+#endif /* CONFIG_JFFS2_REDUCED */
 
 /**
  * Routine implementing u-boot mtdparts command. Initialize/update default global
@@ -2114,6 +2164,7 @@ int do_jffs2_mtdparts(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 #endif /* #ifdef CONFIG_JFFS2_CMDLINE */
 
 /***************************************************/
+#ifndef CONFIG_JFFS2_REDUCED
 U_BOOT_CMD(
 	fsload,	3,	0,	do_jffs2_fsload,
 	"fsload\t- load binary file from a filesystem image\n",
@@ -2133,14 +2184,17 @@ U_BOOT_CMD(
 	"fsinfo\t- print information about filesystems\n",
 	"    - print information about filesystems\n"
 );
+#endif /* CONFIG_JFFS2_REDUCED */
 
 #ifdef CONFIG_JFFS2_CMDLINE
+#ifndef CONFIG_JFFS2_REDUCED
 U_BOOT_CMD(
 	chpart,	2,	0,	do_jffs2_chpart,
 	"chpart\t- change active partition\n",
 	"part-id\n"
 	"    - change active partition (e.g. part-id = nand0,1)\n"
 );
+#endif /* CONFIG_JFFS2_REDUCED */
 
 U_BOOT_CMD(
 	mtdparts,	6,	0,	do_jffs2_mtdparts,

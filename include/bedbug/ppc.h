@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id:  $ */
 
 #ifndef _PPC_H
 #define _PPC_H

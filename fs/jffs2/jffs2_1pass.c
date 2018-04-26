@@ -1,7 +1,7 @@
 /*
 -------------------------------------------------------------------------
  * Filename:      jffs2.c
- * Version:       $Id: jffs2_1pass.c,v 1.7 2002/01/25 01:56:47 nyet Exp $
+ * Version:       $Id:  $
  * Copyright:     Copyright (C) 2001, Russ Dill
  * Author:        Russ Dill <Russ.Dill@asu.edu>
  * Description:   Module to load kernel from jffs2
@@ -42,7 +42,7 @@
  * provisions above, a recipient may use your version of this file
  * under either the RHEPL or the GPL.
  *
- * $Id: jffs2_1pass.c,v 1.7 2002/01/25 01:56:47 nyet Exp $
+ * $Id:  $
  *
  */
 
@@ -712,7 +712,7 @@ jffs2_1pass_find_inode(struct b_lists * pL, const char *name, u32 pino)
 	for(b = pL->dir.listHead; b; b = b->next, counter++) {
 		jDir = (struct jffs2_raw_dirent *) get_node_mem(b->offset);
 		if ((pino == jDir->pino) && (len == jDir->nsize) &&
-		    (jDir->ino) &&	/* 0 for unlink */
+//		    (jDir->ino) &&	/* 0 for unlink */	// ccchiu, ino=0 means obsolete of the dirent with the same name
 		    (!strncmp((char *)jDir->name, name, len))) {	/* a match */
 			if (jDir->version < version) {
 				put_fl_mem(jDir);
@@ -725,6 +725,13 @@ jffs2_1pass_find_inode(struct b_lists * pL, const char *name, u32 pino)
 				putnstr(jDir->name, jDir->nsize);
 				putLabeledWord(" has dup version =", version);
 			}
+#if 0
+			if (version !=0 && jDir->version != version && jDir->ino != inode) {	// return the jDir with highest version# and ino!=0
+				printf("version: %d last version %d\n", jDir->version, version);
+				printf("inode: %ld last inode: %ld\n", jDir->ino, inode);
+			}
+#endif	// ccchiu, filter out the same dirent name with lower version#
+			
 			inode = jDir->ino;
 			version = jDir->version;
 		}
@@ -831,9 +838,22 @@ jffs2_1pass_list_inodes(struct b_lists * pL, u32 pino)
 {
 	struct b_node *b;
 	struct jffs2_raw_dirent *jDir;
+	int ino;	// ccchiu, get the latest ino of the same dirent name
 
 	for (b = pL->dir.listHead; b; b = b->next) {
 		jDir = (struct jffs2_raw_dirent *) get_node_mem(b->offset);
+#if 1
+		jDir->name[jDir->nsize]='\0';
+		ino = jffs2_1pass_find_inode(&pL->dir, jDir->name, jDir->pino);
+                if (ino == 0) {
+			printf("cant find %s\n", jDir->name);
+			continue;	
+		}
+		else {
+			if (ino != jDir->ino)
+				continue;	// not the latest update
+		}
+#endif	// ccchiu, do list only if the dirent can be found with legal ino
 		if ((pino == jDir->pino) && (jDir->ino)) { /* ino=0 -> unlink */
 			u32 i_version = 0;
 			struct jffs2_raw_inode ojNode;
@@ -1200,9 +1220,11 @@ jffs2_1pass_build_lists(struct part_info * part)
 						"%d < %d\n", node->totlen,
 						sizeof(struct jffs2_unknown_node));
 			} else {
-				printf("Unknown node type: %x len %d "
-					"offset 0x%x\n", node->nodetype,
-					node->totlen, offset);
+                if (node->nodetype != JFFS2_NODETYPE_SUMMARY) {
+				    printf("Unknown node type: %x len %d "
+					    "offset 0x%x\n", node->nodetype,
+					    node->totlen, offset);
+                }
 			}
 			offset += ((node->totlen + 3) & ~3);
 			counterF++;

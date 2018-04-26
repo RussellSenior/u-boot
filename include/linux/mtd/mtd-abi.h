@@ -1,5 +1,5 @@
 /*
- * $Id: mtd-abi.h,v 1.7 2004/11/23 15:37:32 gleixner Exp $
+ * $Id:  $
  *
  * Portions of MTD ABI definition which are shared by kernel and user space
  */

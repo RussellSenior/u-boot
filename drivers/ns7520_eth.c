@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2005 by Videon Central, Inc.
  *
- * $Id$
+ * $Id:  $
  * @Author: Arthur Shipkowski
  * @Descr: Ethernet driver for the NS7520. Uses polled Ethernet, like
  *     the older netarmeth driver.  Note that attempting to filter

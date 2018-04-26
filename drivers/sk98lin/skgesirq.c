@@ -2,8 +2,8 @@
  *
  * Name:	skgesirq.c
  * Project:	GEnesis, PCI Gigabit Ethernet Adapter
- * Version:	$Revision: 1.83 $
- * Date:	$Date: 2003/02/05 15:10:59 $
+ * Version:	$Revision: #1 $
+ * Date:	$Date:  $
  * Purpose:	Special IRQ module
  *
  ******************************************************************************/
@@ -366,7 +366,7 @@
  */
 
 static const char SysKonnectFileId[] =
-	"$Id: skgesirq.c,v 1.83 2003/02/05 15:10:59 rschmidt Exp $" ;
+	"$Id:  $" ;
 
 #include "h/skdrv1st.h"		/* Driver Specific Definitions */
 #include "h/skgepnmi.h"		/* PNMI Definitions */

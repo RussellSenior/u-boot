@@ -242,7 +242,7 @@ void miiphy_listdev(void)
 		printf("Current device: '%s'\n", current_mii->name);
 }
 
-
+// #define DEBUG 1
 /*****************************************************************************
  *
  * Read the OUI, manufacture's model number, and revision number.

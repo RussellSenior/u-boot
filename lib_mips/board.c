@@ -45,6 +45,11 @@ extern int timer_init(void);
 
 extern int incaip_set_cpuclk(void);
 
+#ifdef UBNT_APP
+extern int ubntappinit_found_in_env(void);
+extern int do_reset (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[]);
+#endif
+
 extern ulong uboot_end_data;
 extern ulong uboot_end;
 
@@ -113,13 +118,18 @@ static int display_banner(void)
 {
 
 	printf ("\n\n%s\n\n", version_string);
+
 	return (0);
 }
 
 static void display_flash_config(ulong size)
 {
+	u32 flash_id = ubnt_ath_spi_read_id();
 	puts ("Flash: ");
-	print_size (size, "\n");
+	print_size (size, " ");
+	printf("(0x%x, 0x%x, 0x%x)\n",
+		(flash_id >> 16) & 0xff, (flash_id >> 8) & 0xff, (flash_id >> 0) & 0xff);
+
 }
 
 
@@ -159,17 +169,25 @@ static int init_baudrate (void)
 typedef int (init_fnc_t) (void);
 
 init_fnc_t *init_sequence[] = {
+#ifndef COMPRESSED_UBOOT
 	timer_init,
+#endif
 	env_init,		/* initialize environment */
 #ifdef CONFIG_INCA_IP
 	incaip_set_cpuclk,	/* set cpu clock according to environment variable */
 #endif
 	init_baudrate,		/* initialze baudrate settings */
+#ifndef COMPRESSED_UBOOT
 	serial_init,		/* serial communications setup */
+#endif
 	console_init_f,
 	display_banner,		/* say that we are here */
+#ifndef COMPRESSED_UBOOT
+#ifndef UBNT_APP
 	checkboard,
-	init_func_ram,
+#endif
+        init_func_ram,
+#endif
 	NULL,
 };
 
@@ -181,9 +199,13 @@ void board_init_f(ulong bootflag)
 	init_fnc_t **init_fnc_ptr;
 	ulong addr, addr_sp, len = (ulong)&uboot_end - CFG_MONITOR_BASE;
 	ulong *s;
+#ifdef COMPRESSED_UBOOT
+        char board_string[50];
+#endif
 #ifdef CONFIG_PURPLE
 	void copy_code (ulong);
 #endif
+
 
 	/* Pointer is writable since we allocated a register for it.
 	 */
@@ -198,6 +220,14 @@ void board_init_f(ulong bootflag)
 			hang ();
 		}
 	}
+
+#ifdef COMPRESSED_UBOOT
+        checkboard(board_string);
+        printf("%s\n\n",board_string);
+        gd->ram_size = bootflag;
+	puts ("DRAM:  ");
+	print_size (gd->ram_size, "\n");
+#endif
 
 	/*
 	 * Now that we have DRAM mapped and working, we can
@@ -301,6 +331,9 @@ void board_init_r (gd_t *id, ulong dest_addr)
 #ifndef CFG_ENV_IS_NOWHERE
 	extern char * env_name_spec;
 #endif
+#ifdef CONFIG_ATH_NAND_SUPPORT
+	extern ulong ath_nand_init(void);
+#endif
 	char *s, *e;
 	bd_t *bd;
 	int i;
@@ -347,9 +380,11 @@ void board_init_r (gd_t *id, ulong dest_addr)
 	env_name_spec += gd->reloc_off;
 #endif
 
+#ifndef CONFIG_ATH_NAND_BR
 	/* configure available FLASH banks */
 	size = flash_init();
 	display_flash_config (size);
+#endif
 
 	bd = gd->bd;
 	bd->bi_flashstart = CFG_FLASH_BASE;
@@ -363,6 +398,10 @@ void board_init_r (gd_t *id, ulong dest_addr)
 	/* initialize malloc() area */
 	mem_malloc_init();
 	malloc_bin_reloc();
+
+#ifdef CONFIG_ATH_NAND_BR
+	ath_nand_init();
+#endif
 
 	/* relocate environment function pointers etc. */
 	env_relocate();
@@ -405,9 +444,18 @@ void board_init_r (gd_t *id, ulong dest_addr)
 	}
 #endif	/* CFG_CMD_NET */
 
+#ifdef UBNT_APP
+	ubnt_app_load();
+	run_command("go ${ubntaddr} uappinit", 0);
+#endif
+
 #if defined(CONFIG_MISC_INIT_R)
 	/* miscellaneous platform dependent initialisations */
 	misc_init_r ();
+#endif
+
+#ifdef UBNT_APP
+	run_command("go ${ubntaddr} umisc_init_r", 0);
 #endif
 
 #if (CONFIG_COMMANDS & CFG_CMD_NET)
@@ -415,6 +463,21 @@ void board_init_r (gd_t *id, ulong dest_addr)
 	puts ("Net:   ");
 #endif
 	eth_initialize(gd->bd);
+#endif
+
+#if defined(CONFIG_MISC_INIT_END_R)
+	misc_init_end_r();
+#endif
+
+#ifdef UBNT_APP
+	char cmd_str[CFG_CBSIZE];
+	sprintf(cmd_str, "go ${ubntaddr} umisc_init_end_r %d", athr8032_found());
+	run_command(cmd_str, 0);
+#endif
+
+
+#if defined(CONFIG_ATH_NAND_SUPPORT) && !defined(CONFIG_ATH_NAND_BR)
+	ath_nand_init();
 #endif
 
 	/* main_loop() can return to retry autoboot, if so just run it again. */
