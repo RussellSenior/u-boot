@@ -100,6 +100,13 @@ void ubnt_wd_enable(u32 counter) {
 	ar7240_reg_wr_nf (AR7240_WATCHDOG_TMR, counter);
 }
 
+
+int checkboard (void)
+{
+	printf("UBNT-XM (ar7240) U-boot\n");
+	return 0;
+}
+
 void ubnt_wd_reset(u32 counter) {
 	ar7240_reg_wr_nf (AR7240_WATCHDOG_TMR, counter);
 }
@@ -110,7 +117,6 @@ void ubnt_wd_disable() {
 
 #endif
 
-#ifdef UBNT_APP
 int call_boot_progress_app(int status) {
 	char app_cmd[CFG_CBSIZE];
 	sprintf(app_cmd, "go ${ubntaddr} ushowbootprogress %d",status);
@@ -118,7 +124,6 @@ int call_boot_progress_app(int status) {
 	return 0;
 }
 
-#endif /* #ifdef UBNT_APP */
 
 
 extern flash_info_t flash_info[];	/* info for FLASH chips */
